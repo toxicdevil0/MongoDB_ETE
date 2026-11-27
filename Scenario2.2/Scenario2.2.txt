@@ -1,0 +1,88 @@
+Atlas atlas-8yihp0-shard-0 [primary] library> use sales
+switched to db sales
+Atlas atlas-8yihp0-shard-0 [primary] sales> db.orders.insertMany([
+|   { orderId: 1, customer: "Arun", product: "Laptop", category: "Electronics", qty: 1, price: 55000 },
+|   { orderId: 2, customer: "Divya", product: "Mouse", category: "Electronics", qty: 2, price: 500 },
+|   { orderId: 3, customer: "Arun", product: "Notebook", category: "Stationery", qty: 10, price: 40 },
+|   { orderId: 4, customer: "Meena", product: "Pen", category: "Stationery", qty: 20, price: 10 },
+|   { orderId: 5, customer: "Divya", product: "Headphones", category: "Electronics", qty: 1, price: 1500 },
+|   { orderId: 6, customer: "Karthik", product: "Chair", category: "Furniture", qty: 2, price: 3500 }
+| ])
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('6b08fd68bdebca7647405a1d'),
+    '1': ObjectId('6b08fd68bdebca7647405a1e'),
+    '2': ObjectId('6b08fd68bdebca7647405a1f'),
+    '3': ObjectId('6b08fd68bdebca7647405a20'),
+    '4': ObjectId('6b08fd68bdebca7647405a21'),
+    '5': ObjectId('6b08fd68bdebca7647405a22')
+  }
+}
+Atlas atlas-8yihp0-shard-0 [primary] sales> db.orders.aggregate([
+|   { $match: { category: "Electronics" } },
+|   { $project: { _id: 0, orderId: 1, product: 1 } }
+| ])
+[
+  { orderId: 1, product: 'Laptop' },
+  { orderId: 2, product: 'Mouse' },
+  { orderId: 5, product: 'Headphones' }
+]
+Atlas atlas-8yihp0-shard-0 [primary] sales> db.orders.aggregate([
+|   {
+|     $project: {
+|       _id: 0,
+|       orderId: 1,
+|       customer: 1,
+|       lineTotal: { $multiply: ["$qty", "$price"] }
+|     }
+|   }
+| ])
+[
+  { orderId: 1, customer: 'Arun', lineTotal: 55000 },
+  { orderId: 2, customer: 'Divya', lineTotal: 1000 },
+  { orderId: 3, customer: 'Arun', lineTotal: 400 },
+  { orderId: 4, customer: 'Meena', lineTotal: 200 },
+  { orderId: 5, customer: 'Divya', lineTotal: 1500 },
+  { orderId: 6, customer: 'Karthik', lineTotal: 7000 }
+]
+Atlas atlas-8yihp0-shard-0 [primary] sales> db.orders.aggregate([
+|   {
+|     $group: {
+|       _id: "$category",
+|       totalQty: { $sum: "$qty" }
+|     }
+|   }
+| ])
+[
+  { _id: 'Electronics', totalQty: 4 },
+  { _id: 'Furniture', totalQty: 2 },
+  { _id: 'Stationery', totalQty: 30 }
+]
+Atlas atlas-8yihp0-shard-0 [primary] sales> db.orders.aggregate([
+|   {
+|     $group: {
+|       _id: "$category",
+|       revenue: { $sum: { $multiply: ["$qty", "$price"] } },
+|       avgPrice: { $avg: "$price" }
+|     }
+|   },
+|   { $sort: { revenue: -1 } }
+| ])
+[
+  { _id: 'Electronics', revenue: 57500, avgPrice: 19000 },
+  { _id: 'Furniture', revenue: 7000, avgPrice: 3500 },
+  { _id: 'Stationery', revenue: 600, avgPrice: 25 }
+]
+Atlas atlas-8yihp0-shard-0 [primary] sales> db.orders.aggregate([
+|   {
+|     $group: {
+|       _id: "$customer",
+|       spent: { $sum: { $multiply: ["$qty", "$price"] } }
+|     }
+|   },
+|   { $sort: { spent: -1 } },
+|   { $limit: 2 }
+| ])
+[ { _id: 'Arun', spent: 55400 }, { _id: 'Karthik', spent: 7000 } ]
+Atlas atlas-8yihp0-shard-0 [primary] sales>
