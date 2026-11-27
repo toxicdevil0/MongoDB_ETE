@@ -1,0 +1,72 @@
+For mongosh info see: https://www.mongodb.com/docs/mongodb-shell/
+
+Atlas atlas-8yihp0-shard-0 [primary] test> use library
+switched to db library
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.insertMany([
+|   {
+|     name: "Ravi",
+|     address: { city: "Chennai", pin: "600001" },
+|     borrowed: ["Python Basics", "MongoDB Guide"],
+|     fee: 0
+|   },
+|   {
+|     name: "Sita",
+|     address: { city: "Madurai", pin: "625001" },
+|     borrowed: ["MongoDB Guide"],
+|     fee: 50
+|   },
+|   {
+|     name: "Lakshmi",
+|     address: { city: "Trichy", pin: "620001" },
+|     borrowed: ["Python Basics"],
+|     fee: 120
+|   },
+|   {
+|     name: "Kumar",
+|     address: { city: "Chennai", pin: "600028" },
+|     borrowed: [],
+|     fee: 0
+|   }
+| ])
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('6b08fb72bdebca7647405a15'),
+    '1': ObjectId('6b08fb72bdebca7647405a16'),
+    '2': ObjectId('6b08fb72bdebca7647405a17'),
+    '3': ObjectId('6b08fb72bdebca7647405a18')
+  }
+}
+Atlas atlas-8yihp0-shard-0 [primary] library> show dbs
+library  8.00 KiB
+admin         0 B
+local         0 B
+Atlas atlas-8yihp0-shard-0 [primary] library> show collections
+members
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.find({ "address.city": "Chennai" }, { _id: 0, name: 1, address: 1 })
+[
+  { name: 'Ravi', address: { city: 'Chennai', pin: '600001' } },
+  { name: 'Kumar', address: { city: 'Chennai', pin: '600028' } }
+]
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.find({ borrowed: "MongoDB Guide" }, { _id: 0, name: 1, borrowed: 1 })
+[
+  { name: 'Ravi', borrowed: [ 'Python Basics', 'MongoDB Guide' ] },
+  { name: 'Sita', borrowed: [ 'MongoDB Guide' ] }
+]
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.find({ borrowed: { $all: ["Python Basics", "MongoDB Guide"] } }, { _id: 0, name: 1 })
+[ { name: 'Ravi' } ]
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.find({ borrowed: { $size: 0 } }, { _id: 0, name: 1 })
+[ { name: 'Kumar' } ]
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.updateOne({ name: "Sita" }, { $set: { "address.city": "Chennai" } })
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.countDocuments({ fee: { $gt: 0 } })
+2
+Atlas atlas-8yihp0-shard-0 [primary] library> db.members.drop()
+true
+Atlas atlas-8yihp0-shard-0 [primary] library>
